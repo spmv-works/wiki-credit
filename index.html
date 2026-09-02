@@ -49,7 +49,13 @@
   .ref code{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:1px 5px;
     font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--fg)}
   .ref pre{margin:0;padding:10px 12px;background:var(--card);border:1px solid var(--line);
-    border-radius:6px;overflow-x:auto;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--fg)}
+    border-radius:6px;overflow:auto;max-height:320px;
+    font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--fg)}
+  .ref details{border:1px solid var(--line);border-radius:6px;background:var(--card)}
+  .ref summary{padding:8px 12px;cursor:pointer;color:var(--fg);font-size:12px;user-select:none}
+  .ref summary:hover{color:var(--acc)}
+  .ref .rawbody{padding:0 12px 12px}
+  .ref .rawurl{margin:0 0 8px;font-size:12px}
 </style>
 </head>
 <body>
@@ -79,8 +85,13 @@
       </table>
     </div>
     <p>出力: <code>画像：Dietmar Rabich（2012）/CC-BY-SA-4.0</code></p>
-    <p>生データは以下で確認できる（ブラウザで開ける）:</p>
-    <pre>https://commons.wikimedia.org/w/api.php?action=query&amp;prop=imageinfo&amp;iiprop=extmetadata&amp;titles=File:New_York_City_(New_York,_USA),_Wall_Street_--_2012_--_6614.jpg&amp;format=json</pre>
+    <details id="raw">
+      <summary>生データ（APIレスポンス）を表示</summary>
+      <div class="rawbody">
+        <p class="rawurl"><a id="rawlink" href="#" target="_blank" rel="noopener noreferrer">この内容を別タブで開く</a></p>
+        <pre id="rawout">読み込み中…</pre>
+      </div>
+    </details>
   </section>
 
 </div>
@@ -189,6 +200,22 @@
       $("go").disabled=false; $("st").textContent="完了（"+urls.length+"件）";
     });
   }
+
+  // 参照データの生レスポンスを、開いたときだけ取得してその場に展開
+  var RAW_TITLE="File:New York City (New York, USA), Wall Street -- 2012 -- 6614.jpg";
+  var RAW_API="https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo"
+    +"&iiprop=extmetadata&titles="+encodeURIComponent(RAW_TITLE)+"&format=json&origin=*";
+  $("rawlink").href=RAW_API;
+  var rawLoaded=false;
+  $("raw").addEventListener("toggle",function(){
+    if(!$("raw").open||rawLoaded) return;
+    rawLoaded=true;
+    var req=LOCAL?jsonp(RAW_API):fetch(RAW_API).then(function(r){
+      if(!r.ok) throw new Error("HTTP "+r.status); return r.json();
+    });
+    req.then(function(d){ $("rawout").textContent=JSON.stringify(d,null,1); })
+       .catch(function(e){ rawLoaded=false; $("rawout").textContent="取得に失敗しました: "+e.message; });
+  });
 
   $("go").onclick=run;
   $("in").addEventListener("keydown",function(e){
