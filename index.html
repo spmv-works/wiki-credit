@@ -44,7 +44,7 @@
   <textarea id="in" placeholder="https://commons.wikimedia.org/wiki/File:Example.jpg"></textarea>
   <div class="bar">
     <button id="go" class="p">生成</button>
-    <button id="all">全部コピー</button>
+    <button id="all" hidden>全部コピー</button>
     <span id="st" class="note"></span>
   </div>
 
@@ -125,11 +125,12 @@
     var urls=$("in").value.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean);
     if(!urls.length){$("st").textContent="URLを入れてください";return}
     $("out").innerHTML=""; $("go").disabled=true; $("st").textContent="生成中…";
-    var done=0;
+    $("all").hidden=true;
+    var done=0,ok=0;
     urls.reduce(function(chain,u){
       return chain.then(function(){
         return Promise.resolve().then(function(){return fetchOne(u)})
-          .then(function(t){$("out").appendChild(row(t,false))})
+          .then(function(t){$("out").appendChild(row(t,false)); if(++ok>1) $("all").hidden=false})
           .catch(function(e){$("out").appendChild(row(e.message+" — "+u,true))})
           .then(function(){$("st").textContent="生成中… "+(++done)+"/"+urls.length});
       });
@@ -144,7 +145,6 @@
   });
   $("all").onclick=function(){
     var t=[].map.call($("out").querySelectorAll("li:not(.bad) .txt"),function(i){return i.value}).join("\n");
-    if(!t){$("st").textContent="コピーする結果がありません";return}
     copy(t); $("st").textContent="全部コピーしました";
   };
 })();
