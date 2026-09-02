@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Wikimedia Commons 注釈生成</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <h1>Wikimedia Commons 注釈生成</h1>
+  <p class="subtitle">URLを貼ると 画像：作者（年）/ライセンス を生成</p>
+</div>
+
+<div class="config">
+  <div class="row"><label>Wikimedia Commons URL</label></div>
+  <input id="url" type="text" placeholder="https://commons.wikimedia.org/wiki/File:...">
+  <div class="actions-row">
+    <button id="btn-search" class="primary">🔍 生成</button>
+  </div>
+</div>
+
+<div id="result-area" class="config hidden">
+  <div class="row"><label>出力</label></div>
+  <input id="credit" type="text" readonly>
+  <div class="actions-row">
+    <button id="btn-copy" class="primary">📋 コピー</button>
+  </div>
+  <details class="meta-details">
+    <summary>抽出メタデータ（編集可）</summary>
+    <div class="meta-grid">
+      <label>Author</label><input id="author" type="text">
+      <label>Year</label><input id="year" type="text">
+      <label>License</label><input id="license" type="text">
+    </div>
+  </details>
+</div>
+
+<div id="log"></div>
+
+<script src="js/CSInterface.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
