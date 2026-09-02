@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8731", "--directory", "extension/client"],
       "port": 8731
+    },
+    {
+      "name": "wiki-credit-standalone",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8732", "--directory", "standalone"],
+      "port": 8732
     }
   ]
 }

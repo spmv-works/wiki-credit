@@ -107,7 +107,8 @@
     var done=0;
     urls.reduce(function(chain,u){
       return chain.then(function(){
-        return fetchOne(u).then(function(t){$("out").appendChild(row(t,false))})
+        return Promise.resolve().then(function(){return fetchOne(u)})
+          .then(function(t){$("out").appendChild(row(t,false))})
           .catch(function(e){$("out").appendChild(row(e.message+" — "+u,true))})
           .then(function(){$("st").textContent="生成中… "+(++done)+"/"+urls.length});
       });

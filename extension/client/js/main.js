@@ -78,7 +78,7 @@
     if (!url) { log("URLを入力してください", "err"); return; }
     log("生成中: " + url, "info");
     $("btn-search").disabled = true;
-    fetchMeta(url).then(function (m) {
+    Promise.resolve().then(function () { return fetchMeta(url); }).then(function (m) {
       $("author").value = m.author;
       $("year").value = m.year;
       $("license").value = m.license;
