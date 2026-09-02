@@ -7,6 +7,7 @@
 <style>
   :root{--bg:#f6f6f4;--fg:#1a1a18;--mut:#77776f;--line:#dcdcd5;--card:#fff;--acc:#2f6f4f;--err:#b03028}
   @media (prefers-color-scheme:dark){:root{--bg:#16161a;--fg:#eceae4;--mut:#8b8b84;--line:#33333a;--card:#1e1e23;--acc:#6fbb92;--err:#e0736a}}
+  html{color-scheme:light dark}
   *{box-sizing:border-box}
   body{margin:0;padding:32px 20px 64px;background:var(--bg);color:var(--fg);
     font:15px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
@@ -37,6 +38,18 @@
   .thumb img{width:100%;height:100%;object-fit:cover;display:block}
   a.thumb:hover{border-color:var(--acc)}
   .thumb.ph{border-style:dashed;opacity:.4}
+  .ref{margin:52px 0 0;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:12px}
+  .ref h2{font-size:13px;color:var(--fg);margin:0 0 10px;letter-spacing:.02em}
+  .ref p{margin:0 0 12px;line-height:1.7}
+  .ref a{color:var(--acc)}
+  .ref .scroll{overflow-x:auto;margin:0 0 12px}
+  .ref table{border-collapse:collapse;font-size:12px;white-space:nowrap}
+  .ref th,.ref td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+  .ref th{color:var(--fg);font-weight:600;background:var(--card)}
+  .ref code{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:1px 5px;
+    font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--fg)}
+  .ref pre{margin:0;padding:10px 12px;background:var(--card);border:1px solid var(--line);
+    border-radius:6px;overflow-x:auto;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--fg)}
 </style>
 </head>
 <body>
@@ -52,6 +65,23 @@
   </div>
 
   <ul id="out"></ul>
+
+  <section class="ref">
+    <h2>参照しているデータ</h2>
+    <p>MediaWiki API の <code>extmetadata</code> から<strong>次の3つだけ</strong>を読んでいる。</p>
+    <p>実例: <a href="https://commons.wikimedia.org/wiki/File:New_York_City_(New_York,_USA),_Wall_Street_--_2012_--_6614.jpg" target="_blank" rel="noopener noreferrer">File:New York City (New York, USA), Wall Street -- 2012 -- 6614.jpg</a></p>
+    <div class="scroll">
+      <table>
+        <tr><th>出力の位置</th><th>参照フィールド</th><th>このファイルでの値</th></tr>
+        <tr><td>作者</td><td><code>Artist</code></td><td>Dietmar Rabich</td></tr>
+        <tr><td>年</td><td><code>DateTimeOriginal</code></td><td>Taken on 30 July 2012, 12:22 → <code>2012</code></td></tr>
+        <tr><td>ライセンス</td><td><code>LicenseShortName</code></td><td>CC BY-SA 4.0 → <code>CC-BY-SA-4.0</code></td></tr>
+      </table>
+    </div>
+    <p>出力: <code>画像：Dietmar Rabich（2012）/CC-BY-SA-4.0</code></p>
+    <p>生データは以下で確認できる（ブラウザで開ける）:</p>
+    <pre>https://commons.wikimedia.org/w/api.php?action=query&amp;prop=imageinfo&amp;iiprop=extmetadata&amp;titles=File:New_York_City_(New_York,_USA),_Wall_Street_--_2012_--_6614.jpg&amp;format=json</pre>
+  </section>
 
 </div>
 
