@@ -20,19 +20,6 @@ URLを貼って「生成」を押すだけ。1行1URLで複数まとめて処理
 - **ファイルを渡す** — `index.html` 単体をメール添付で送ってもよい。
   `file://` で開かれた場合は JSONP に切り替わるため、Safari でも動く
 
-## Premiere CEP 拡張版
-
-`extension/` は同じ機能の Premiere Pro パネル版。
-
-```
-./install.sh
-```
-
-でシンボリックリンクを張り、Premiere再起動後
-「ウィンドウ > 拡張機能 > Wikimedia Commons 注釈生成」から開く。
-
-Web版があれば基本は不要。Premiere内で完結させたい場合のみ。
-
 ## 仕組み
 
 MediaWiki API (`prop=imageinfo&iiprop=extmetadata`) から
