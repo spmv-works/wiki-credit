@@ -32,6 +32,11 @@
     word-break:break-all;background:none;border:none;color:var(--fg);padding:0;width:100%}
   li.bad .txt{color:var(--err)}
   .mini{font-size:12px;padding:5px 10px;flex:none}
+  .thumb{width:32px;height:32px;flex:none;border-radius:4px;overflow:hidden;
+    border:1px solid var(--line);background:var(--bg);display:block;line-height:0}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  a.thumb:hover{border-color:var(--acc)}
+  .thumb.ph{border-style:dashed;opacity:.4}
   .foot{margin:36px 0 0;padding-top:16px;border-top:1px solid var(--line);
     color:var(--mut);font-size:12px;line-height:1.7}
 </style>
@@ -93,7 +98,8 @@
   function fetchOne(url){
     var title=extractTitle(url);
     var api="https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo"
-      +"&iiprop=extmetadata&titles="+encodeURIComponent(title)+"&format=json&origin=*";
+      +"&iiprop=extmetadata|url&iiurlwidth=64"
+      +"&titles="+encodeURIComponent(title)+"&format=json&origin=*";
     var req=LOCAL?jsonp(api):fetch(api).then(function(r){
       if(!r.ok) throw new Error("HTTP "+r.status); return r.json();
     });
@@ -102,10 +108,15 @@
       if(!k.length) throw new Error("API応答なし");
       var p=pages[k[0]];
       if(p.missing!==undefined) throw new Error("ファイルが見つかりません: "+title);
-      var e=(p.imageinfo&&p.imageinfo[0]||{}).extmetadata||{};
+      var ii=p.imageinfo&&p.imageinfo[0]||{};
+      var e=ii.extmetadata||{};
       var v=function(x){return e[x]?e[x].value:""};
-      return credit(stripHtml(v("Artist")),year(stripHtml(v("DateTimeOriginal")||v("DateTime"))),
-                    license(stripHtml(v("LicenseShortName"))));
+      return {
+        text:credit(stripHtml(v("Artist")),year(stripHtml(v("DateTimeOriginal")||v("DateTime"))),
+                    license(stripHtml(v("LicenseShortName")))),
+        thumb:ii.thumburl||"",
+        orig:ii.url||ii.descriptionurl||""
+      };
     });
   }
 
@@ -113,9 +124,22 @@
     var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);
     ta.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(ta);
   }
-  function row(text,bad){
+  function thumbEl(m){
+    if(!m.thumb) return null;
+    var a=document.createElement("a");
+    a.className="thumb"; a.href=m.orig||m.thumb; a.target="_blank"; a.rel="noopener noreferrer";
+    a.title="オリジナル画質を別タブで開く";
+    var img=document.createElement("img");
+    img.src=m.thumb; img.alt=""; img.decoding="async";
+    img.width=32; img.height=32;
+    a.appendChild(img); return a;
+  }
+  function row(m,bad){
     var li=document.createElement("li"); if(bad) li.className="bad";
-    var i=document.createElement("input"); i.className="txt"; i.value=text; i.readOnly=!!bad;
+    var t=thumbEl(bad?{}:m);
+    if(t) li.appendChild(t); else li.appendChild(document.createElement("span")).className="thumb ph";
+    var i=document.createElement("input"); i.className="txt";
+    i.value=bad?m:m.text; i.readOnly=!!bad;
     var b=document.createElement("button"); b.className="mini"; b.textContent="コピー";
     b.onclick=function(){copy(i.value);b.textContent="✓";setTimeout(function(){b.textContent="コピー"},900)};
     li.appendChild(i); li.appendChild(b); return li;
