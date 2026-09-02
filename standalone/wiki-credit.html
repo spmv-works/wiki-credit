@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wikimedia Commons 注釈生成</title>
+<style>
+  :root{--bg:#f6f6f4;--fg:#1a1a18;--mut:#77776f;--line:#dcdcd5;--card:#fff;--acc:#2f6f4f;--err:#b03028}
+  @media (prefers-color-scheme:dark){:root{--bg:#16161a;--fg:#eceae4;--mut:#8b8b84;--line:#33333a;--card:#1e1e23;--acc:#6fbb92;--err:#e0736a}}
+  *{box-sizing:border-box}
+  body{margin:0;padding:32px 20px 64px;background:var(--bg);color:var(--fg);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+  .wrap{max-width:720px;margin:0 auto}
+  h1{font-size:19px;margin:0 0 4px;letter-spacing:.02em}
+  .sub{color:var(--mut);font-size:13px;margin:0 0 24px}
+  textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--line);border-radius:8px;
+    background:var(--card);color:var(--fg);font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}
+  textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+  .bar{display:flex;gap:10px;align-items:center;margin-top:12px}
+  button{border:1px solid var(--line);background:var(--card);color:var(--fg);
+    padding:8px 16px;border-radius:7px;font-size:14px;cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+  @media (prefers-color-scheme:dark){button.p{color:#12130f}}
+  button:disabled{opacity:.5;cursor:default}
+  .note{color:var(--mut);font-size:12px}
+  ul{list-style:none;margin:28px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+  li{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+    display:flex;gap:12px;align-items:center}
+  li.bad{border-color:var(--err)}
+  .txt{flex:1;min-width:0;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    word-break:break-all;background:none;border:none;color:var(--fg);padding:0;width:100%}
+  li.bad .txt{color:var(--err)}
+  .mini{font-size:12px;padding:5px 10px;flex:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Wikimedia Commons 注釈生成</h1>
+  <p class="sub">File: ページのURLを貼って「生成」。<code>画像：作者（年）/ライセンス</code> を作ります。1行1URLで複数まとめて可。</p>
+
+  <textarea id="in" placeholder="https://commons.wikimedia.org/wiki/File:Example.jpg"></textarea>
+  <div class="bar">
+    <button id="go" class="p">生成</button>
+    <button id="all">全部コピー</button>
+    <span id="st" class="note"></span>
+  </div>
+
+  <ul id="out"></ul>
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+
+  function extractTitle(url){
+    var u=String(url||"").trim();
+    if(!u) throw new Error("URLが空です");
+    var m=u.match(/\/wiki\/(File:[^?#]+)/i)||u.match(/[?&]title=(File:[^&#]+)/i);
+    if(!m) throw new Error("Commons の File: URL ではありません");
+    return decodeURIComponent(m[1]).replace(/_/g," ");
+  }
+  function stripHtml(h){var d=document.createElement("div");d.innerHTML=String(h||"");
+    return d.textContent.replace(/\s+/g," ").trim()}
+  function year(s){var m=String(s||"").match(/(19|20)\d{2}/);return m?m[0]:""}
+  function license(s){
+    var t=String(s||"").trim(); if(!t) return "";
+    t=t.replace(/^cc[- ]/i,"CC-").replace(/\s+/g,"-").replace(/--+/g,"-");
+    return t.toUpperCase().replace("PUBLIC-DOMAIN","Public Domain");
+  }
+  function credit(a,y,l){return "画像："+(a||"?")+"（"+(y||"?")+"）/"+(l||"?")}
+
+  function fetchOne(url){
+    var title=extractTitle(url);
+    var api="https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo"
+      +"&iiprop=extmetadata&titles="+encodeURIComponent(title)+"&format=json&origin=*";
+    return fetch(api).then(function(r){
+      if(!r.ok) throw new Error("HTTP "+r.status); return r.json();
+    }).then(function(d){
+      var pages=(d&&d.query&&d.query.pages)||{},k=Object.keys(pages);
+      if(!k.length) throw new Error("API応答なし");
+      var p=pages[k[0]];
+      if(p.missing!==undefined) throw new Error("ファイルが見つかりません: "+title);
+      var e=(p.imageinfo&&p.imageinfo[0]||{}).extmetadata||{};
+      var v=function(x){return e[x]?e[x].value:""};
+      return credit(stripHtml(v("Artist")),year(stripHtml(v("DateTimeOriginal")||v("DateTime"))),
+                    license(stripHtml(v("LicenseShortName"))));
+    });
+  }
+
+  function copy(t){
+    var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);
+    ta.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(ta);
+  }
+  function row(text,bad){
+    var li=document.createElement("li"); if(bad) li.className="bad";
+    var i=document.createElement("input"); i.className="txt"; i.value=text; i.readOnly=!!bad;
+    var b=document.createElement("button"); b.className="mini"; b.textContent="コピー";
+    b.onclick=function(){copy(i.value);b.textContent="✓";setTimeout(function(){b.textContent="コピー"},900)};
+    li.appendChild(i); li.appendChild(b); return li;
+  }
+
+  function run(){
+    var urls=$("in").value.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean);
+    if(!urls.length){$("st").textContent="URLを入れてください";return}
+    $("out").innerHTML=""; $("go").disabled=true; $("st").textContent="生成中…";
+    var done=0;
+    urls.reduce(function(chain,u){
+      return chain.then(function(){
+        return fetchOne(u).then(function(t){$("out").appendChild(row(t,false))})
+          .catch(function(e){$("out").appendChild(row(e.message+" — "+u,true))})
+          .then(function(){$("st").textContent="生成中… "+(++done)+"/"+urls.length});
+      });
+    },Promise.resolve()).then(function(){
+      $("go").disabled=false; $("st").textContent="完了（"+urls.length+"件）";
+    });
+  }
+
+  $("go").onclick=run;
+  $("in").addEventListener("keydown",function(e){
+    if((e.metaKey||e.ctrlKey)&&e.key==="Enter"){e.preventDefault();run()}
+  });
+  $("all").onclick=function(){
+    var t=[].map.call($("out").querySelectorAll("li:not(.bad) .txt"),function(i){return i.value}).join("\n");
+    if(!t){$("st").textContent="コピーする結果がありません";return}
+    copy(t); $("st").textContent="全部コピーしました";
+  };
+})();
+</script>
+</body>
+</html>
