@@ -3,7 +3,7 @@
 Wikimedia Commons の File: ページURLから、動画テロップ用のクレジット文字列
 `画像：作者（年）/ライセンス` を生成するツール。
 
-**Web版（推奨）: https://daiki-morishita.github.io/wiki-credit/**
+**Web版（推奨）: https://spmv-works.github.io/wiki-credit/**
 
 URLを貼って「生成」を押すだけ。1行1URLで複数まとめて処理できる。
 インストール不要、ログイン不要、Mac/Windows どちらでも動く。
