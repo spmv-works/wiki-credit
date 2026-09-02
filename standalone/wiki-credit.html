@@ -70,13 +70,30 @@
   }
   function credit(a,y,l){return "画像："+(a||"?")+"（"+(y||"?")+"）/"+(l||"?")}
 
+  // file:// で開かれた場合、Safari は fetch を遮断するため JSONP に切り替える
+  var LOCAL=location.protocol==="file:";
+  var jsonpN=0;
+  function jsonp(base){
+    return new Promise(function(res,rej){
+      var cb="wc_cb_"+(++jsonpN)+"_"+Date.now();
+      var sc=document.createElement("script");
+      var t=setTimeout(function(){cleanup();rej(new Error("タイムアウト"))},15000);
+      function cleanup(){clearTimeout(t);delete window[cb];if(sc.parentNode)sc.parentNode.removeChild(sc)}
+      window[cb]=function(d){cleanup();res(d)};
+      sc.onerror=function(){cleanup();rej(new Error("通信に失敗しました"))};
+      sc.src=base+"&callback="+cb;
+      document.head.appendChild(sc);
+    });
+  }
+
   function fetchOne(url){
     var title=extractTitle(url);
     var api="https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo"
       +"&iiprop=extmetadata&titles="+encodeURIComponent(title)+"&format=json&origin=*";
-    return fetch(api).then(function(r){
+    var req=LOCAL?jsonp(api):fetch(api).then(function(r){
       if(!r.ok) throw new Error("HTTP "+r.status); return r.json();
-    }).then(function(d){
+    });
+    return req.then(function(d){
       var pages=(d&&d.query&&d.query.pages)||{},k=Object.keys(pages);
       if(!k.length) throw new Error("API応答なし");
       var p=pages[k[0]];

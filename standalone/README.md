@@ -12,7 +12,11 @@
 3. Settings > Pages > Branch: main / root
 4. `https://<user>.github.io/<repo>/` を配る
 
-## 注意
+## メールで送る場合
 
-- MediaWiki API を直接叩くため、`file://` で直接開くと CORS で失敗することがある。
-  HTTP(S) 配信（GitHub Pages / Vercel / ローカルの `python3 -m http.server`）で使う。
+このHTML 1ファイルを添付するだけでよい。相手はダブルクリックで開ける。
+`file://` で開かれたときは CORS を回避するため自動で JSONP に切り替わるので、
+Safari でも Chrome でも動く。
+
+ただし社内メールゲートウェイが HTML 添付を剥がすことがある。
+継続的に配るなら GitHub Pages で URL を渡すほうが確実。
